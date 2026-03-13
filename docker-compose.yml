@@ -1,0 +1,60 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    hostname: gitlab
+    restart: always
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # Replace with your domain or use your server IP
+        external_url 'https://git.example.com'
+
+        # SSH port - must match the host port mapped below
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+
+        # Reverse proxy settings (if using nginx/caddy in front of GitLab)
+        # Remove these if NOT using a reverse proxy
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        nginx['proxy_set_headers'] = {
+          "X-Forwarded-Proto" => "https",
+          "X-Forwarded-Ssl" => "on"
+        }
+
+        # Resource optimization for small servers (2-4 cores)
+        puma['worker_processes'] = 0
+        puma['worker_timeout'] = 120
+        sidekiq['concurrency'] = 5
+
+        # Disable services you don't need to save resources
+        prometheus_monitoring['enable'] = false
+        alertmanager['enable'] = false
+        node_exporter['enable'] = false
+        redis_exporter['enable'] = false
+        postgres_exporter['enable'] = false
+        gitlab_exporter['enable'] = false
+
+        # Disable container registry (enable later if needed)
+        registry['enable'] = false
+        gitlab_rails['registry_enabled'] = false
+
+        # PostgreSQL tuning for low resources
+        postgresql['shared_buffers'] = "256MB"
+        postgresql['max_worker_processes'] = 2
+
+        # Reduce Gitaly resource usage
+        gitaly['configuration'] = {
+          concurrency: [
+            { rpc: "/gitaly.SmartHTTPService/PostReceivePack", max_per_repo: 3 },
+            { rpc: "/gitaly.SSHService/SSHUploadPack", max_per_repo: 3 },
+          ],
+        }
+    ports:
+      - "8080:80"    # Web UI (map to 80:80 if not using a reverse proxy)
+      - "8443:443"   # HTTPS (unused if behind a reverse proxy)
+      - "2222:22"    # SSH for Git operations
+    volumes:
+      - ./config:/etc/gitlab
+      - ./logs:/var/log/gitlab
+      - ./data:/var/opt/gitlab
+    shm_size: '256m'
