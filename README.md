@@ -1,5 +1,7 @@
 # Self-Hosted GitLab CE (Docker)
 
+> **Original repo:** [git.antonsatt.com/Kaffe/gitlab-self-hosted](https://git.antonsatt.com/Kaffe/gitlab-self-hosted) | **Project page:** [antonsatt.com/gitlab.html](https://antonsatt.com/gitlab.html)
+
 A resource-optimized GitLab CE setup designed for small cloud servers (2-4 CPU cores, 4+ GB RAM). Runs GitLab in Docker behind an nginx reverse proxy with HTTPS via Let's Encrypt.
 
 ## Requirements
