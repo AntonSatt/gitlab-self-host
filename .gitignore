@@ -1,0 +1,8 @@
+.env
+config/
+data/
+logs/
+backups/
+*.tar
+*.tar.gz
+*.tgz

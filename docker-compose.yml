@@ -1,32 +1,32 @@
 services:
   gitlab:
-    image: gitlab/gitlab-ce:latest
+    image: gitlab/gitlab-ce:${GITLAB_VERSION:?Set GITLAB_VERSION in .env}
     container_name: gitlab
-    hostname: gitlab
+    hostname: ${GITLAB_DOMAIN:?Set GITLAB_DOMAIN in .env}
     restart: always
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        # Replace with your domain or use your server IP
-        external_url 'https://git.example.com'
+        external_url 'https://${GITLAB_DOMAIN}'
+        gitlab_rails['gitlab_shell_ssh_port'] = ${GITLAB_SSH_PORT:-2222}
 
-        # SSH port - must match the host port mapped below
-        gitlab_rails['gitlab_shell_ssh_port'] = 2222
-
-        # Reverse proxy settings (if using nginx/caddy in front of GitLab)
-        # Remove these if NOT using a reverse proxy
+        # TLS terminates at Traefik or Nginx.
         nginx['listen_port'] = 80
         nginx['listen_https'] = false
+        letsencrypt['enable'] = false
         nginx['proxy_set_headers'] = {
+          "Host" => "$$http_host_with_default",
+          "X-Real-IP" => "$$remote_addr",
+          "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
           "X-Forwarded-Proto" => "https",
           "X-Forwarded-Ssl" => "on"
         }
 
-        # Resource optimization for small servers (2-4 cores)
+        # Low-resource profile used by the reference deployment.
         puma['worker_processes'] = 0
         puma['worker_timeout'] = 120
         sidekiq['concurrency'] = 5
 
-        # Disable services you don't need to save resources
+        # Disable bundled metrics services when external monitoring is used.
         prometheus_monitoring['enable'] = false
         alertmanager['enable'] = false
         node_exporter['enable'] = false
@@ -34,15 +34,13 @@ services:
         postgres_exporter['enable'] = false
         gitlab_exporter['enable'] = false
 
-        # Disable container registry (enable later if needed)
+        # Enable later only if the container registry is required.
         registry['enable'] = false
         gitlab_rails['registry_enabled'] = false
 
-        # PostgreSQL tuning for low resources
         postgresql['shared_buffers'] = "256MB"
         postgresql['max_worker_processes'] = 2
 
-        # Reduce Gitaly resource usage
         gitaly['configuration'] = {
           concurrency: [
             { rpc: "/gitaly.SmartHTTPService/PostReceivePack", max_per_repo: 3 },
@@ -50,11 +48,15 @@ services:
           ],
         }
     ports:
-      - "8080:80"    # Web UI (map to 80:80 if not using a reverse proxy)
-      - "8443:443"   # HTTPS (unused if behind a reverse proxy)
-      - "2222:22"    # SSH for Git operations
+      - "${GITLAB_HTTP_BIND:-127.0.0.1}:${GITLAB_HTTP_PORT:-8080}:80"
+      - "${GITLAB_SSH_BIND:-0.0.0.0}:${GITLAB_SSH_PORT:-2222}:22"
     volumes:
       - ./config:/etc/gitlab
       - ./logs:/var/log/gitlab
       - ./data:/var/opt/gitlab
-    shm_size: '256m'
+    shm_size: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: "5"
