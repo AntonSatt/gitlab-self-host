@@ -1,6 +1,6 @@
 # Self-Hosted GitLab CE on Docker and K3s
 
-[![GitLab 19.2.1](https://img.shields.io/badge/GitLab%20CE-19.2.1-FC6D26?logo=gitlab&logoColor=white)](https://docs.gitlab.com/update/)
+[![GitLab 19.2.4](https://img.shields.io/badge/GitLab%20CE-19.2.4-FC6D26?logo=gitlab&logoColor=white)](https://docs.gitlab.com/update/)
 [![Compose validation](https://github.com/AntonSatt/gitlab-self-host/actions/workflows/validate.yml/badge.svg)](https://github.com/AntonSatt/gitlab-self-host/actions/workflows/validate.yml)
 [![Live GitLab](https://img.shields.io/website?url=https%3A%2F%2Fgit.antonsatt.com%2Fusers%2Fsign_in&label=live%20GitLab)](https://git.antonsatt.com/explore/projects/active)
 
@@ -34,11 +34,11 @@ K3s handles the public HTTP entry point shared with the rest of the homelab.
 
 ### Audited live state
 
-The live instance was checked and upgraded on 2026-08-01.
+The live instance was checked and upgraded on 2026-08-19.
 
 | Component | Live configuration |
 | --- | --- |
-| GitLab | Community Edition 19.2.1, pinned Docker image |
+| GitLab | Community Edition 19.2.4, pinned Docker image |
 | Runtime | Docker Compose on an ARM64 Oracle Cloud VM |
 | Web routing | K3s Traefik to the host's private address on port 8080 |
 | TLS | cert-manager with Let's Encrypt |
@@ -90,7 +90,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```dotenv
-GITLAB_VERSION=19.2.1-ce.0
+GITLAB_VERSION=19.2.4-ce.0
 GITLAB_DOMAIN=git.example.com
 GITLAB_HTTP_BIND=127.0.0.1
 GITLAB_HTTP_PORT=8080
@@ -180,8 +180,8 @@ exact version, follow every required upgrade stop, finish background migrations,
 and take both application and configuration backups first.
 
 See [docs/operations.md](docs/operations.md) for the tested backup, upgrade,
-verification, and rollback procedure. The 19.1.1 to 19.2.1 live upgrade used
-that sequence successfully.
+verification, and rollback procedure. The 19.2.1 to 19.2.4 live security
+upgrade used that sequence successfully.
 
 Useful day-to-day checks:
 
